@@ -77,6 +77,7 @@ namespace SoapCore
 									// write element with name as outResult.Key and type information as outResultType
 									// i.e. <outResult.Key xsi:type="outResultType" ... />
 									var outResultType = outResult.Value.GetType();
+									// TODO: RdH - Add customization through XmlRootAtrtibute
 									var serializer = CachedXmlSerializer.GetXmlSerializer(outResultType, outResult.Key, _serviceNamespace);
 									lock (serializer)
 									{
