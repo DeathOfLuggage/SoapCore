@@ -79,13 +79,7 @@ namespace SoapCore
 									// write element with name as outResult.Key and type information as outResultType
 									// i.e. <outResult.Key xsi:type="outResultType" ... />
 									var outResultType = outResult.Value.GetType();
-									
-									// Quick check for XmlRootAttribute, maybe this should be done inside the OperationDescription class?
-									var xmlRootAttr = resultType.GetTypeInfo().GetCustomAttributes<XmlRootAttribute>().FirstOrDefault();
-									var xmlName = string.IsNullOrWhiteSpace(xmlRootAttr?.ElementName) ? resultType.Name : xmlRootAttr.ElementName;
-									var xmlNs = string.IsNullOrWhiteSpace(xmlRootAttr?.Namespace) ? _serviceNamespace : xmlRootAttr.Namespace;
-									
-									var serializer = CachedXmlSerializer.GetXmlSerializer(resultType, needResponseEnvelope ? _resultName : xmlName, xmlNs);
+									var serializer = CachedXmlSerializer.GetXmlSerializer(outResultType, outResult.Key, _serviceNamespace);
 									lock (serializer)
 									{
 										serializer.Serialize(stream, outResult.Value);
@@ -130,7 +124,13 @@ namespace SoapCore
 						{
 							// see https://referencesource.microsoft.com/System.Xml/System/Xml/Serialization/XmlSerializer.cs.html#c97688a6c07294d5
 							var resultType = _result.GetType();
-							var serializer = CachedXmlSerializer.GetXmlSerializer(resultType, needResponseEnvelope ? _resultName : resultType.Name, _serviceNamespace);
+
+							// Quick check for XmlRootAttribute, maybe this should be done inside the OperationDescription class?
+							var xmlRootAttr = resultType.GetTypeInfo().GetCustomAttributes<XmlRootAttribute>().FirstOrDefault();
+							var xmlName = string.IsNullOrWhiteSpace(xmlRootAttr?.ElementName) ? resultType.Name : xmlRootAttr.ElementName;
+							var xmlNs = string.IsNullOrWhiteSpace(xmlRootAttr?.Namespace) ? _serviceNamespace : xmlRootAttr.Namespace;
+
+							var serializer = CachedXmlSerializer.GetXmlSerializer(resultType, needResponseEnvelope ? _resultName : xmlName, xmlNs);
 							lock (serializer)
 							{
 								serializer.Serialize(writer, _result);
