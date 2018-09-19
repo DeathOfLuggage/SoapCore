@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.ServiceModel.Channels;
 using System.Xml;
@@ -77,8 +79,13 @@ namespace SoapCore
 									// write element with name as outResult.Key and type information as outResultType
 									// i.e. <outResult.Key xsi:type="outResultType" ... />
 									var outResultType = outResult.Value.GetType();
-									// TODO: RdH - Add customization through XmlRootAtrtibute
-									var serializer = CachedXmlSerializer.GetXmlSerializer(outResultType, outResult.Key, _serviceNamespace);
+									
+									// Quick check for XmlRootAttribute, maybe this should be done inside the OperationDescription class?
+									var xmlRootAttr = resultType.GetTypeInfo().GetCustomAttributes<XmlRootAttribute>().FirstOrDefault();
+									var xmlName = string.IsNullOrWhiteSpace(xmlRootAttr?.ElementName) ? resultType.Name : xmlRootAttr.ElementName;
+									var xmlNs = string.IsNullOrWhiteSpace(xmlRootAttr?.Namespace) ? _serviceNamespace : xmlRootAttr.Namespace;
+									
+									var serializer = CachedXmlSerializer.GetXmlSerializer(resultType, needResponseEnvelope ? _resultName : xmlName, xmlNs);
 									lock (serializer)
 									{
 										serializer.Serialize(stream, outResult.Value);
